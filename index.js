@@ -1,8 +1,14 @@
 import express from 'express';
-import { GoogleGenerativeAI as GoogleGenAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 const app = express();
 app.use(express.json());
+
+if (!process.env.GEMINI_API_KEY?.trim()) {
+  throw new Error('Configure GEMINI_API_KEY no ambiente do Render.');
+}
+
+app.get('/health', (_req, res) => res.json({ ok: true }));
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -23,7 +29,7 @@ app.post('/api/chat', async (req, res) => {
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
       contents: [
         { role: 'user', parts: [{ text: `${systemPrompt}\n\nJogador disse: "${playerMessage}"` }] }
       ],
